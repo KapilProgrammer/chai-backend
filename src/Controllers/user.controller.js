@@ -3,6 +3,8 @@ import { ApiError } from '../utils/ApiError.js';
 import { User } from '../modules/user.Model.js';
 import { uplodeFilePath } from '../utils/Cloudnery.js';
 import { ApiResponce } from '../utils/ApiResponce.js';
+import { log } from 'console';
+import { ref } from 'process';
 
 const registerUser = asyncHandler(async (req,res) => {
     // 1 -> Valedate User Details
@@ -15,30 +17,35 @@ const registerUser = asyncHandler(async (req,res) => {
     // 8 -> return responce
 
     const {username,email,fullname,password} = req.body
-    console.log("Email ",email);
+    // console.log("Email ",email);
     if(
         [username,email,fullname,password].some((field) => field?.trim() === "")
     ){
         throw new ApiError(400," full name is require")
     }
 
-    const existUser = User.findOne({
+    const existUser = await User.findOne({
         $or : [{username},{email}]
     })
 
     if(existUser){
         throw new ApiError(409," Username or email already exist")
     }
-
+    // console.log(req.files);
+    
     const avtarLocalpath = req.files?.avatar[0]?.path;
-    const coverLocalpath = req.files?.coverimage[0]?.path;
+    // const coverLocalpath = req.files?.coverimage[0]?.path;
 
+    let coverImageLocalPath;
+    if(req.files && Array.isArray(req.files.coverImage) && (req.files.coverImage.length > 0)){
+        coverImageLocalPath = req.files.coverImage[0].path
+    }
     if(!avtarLocalpath){
         throw new ApiError(400, " Avatar file is required")
     }
 
     const avatar = await uplodeFilePath(avtarLocalpath)
-    const coverImage = await uplodeFilePath(coverLocalpath)
+    const coverImage = await uplodeFilePath(coverImageLocalPath)
 
     if(!avatar){
         throw new ApiError(400, " An error occer during uploding avatar")
@@ -47,7 +54,7 @@ const registerUser = asyncHandler(async (req,res) => {
     const user = await User.create({
         fullname,
         avatar : avatar.url,
-        coverImage : coverImage.url,
+        coverImage : coverImage?.url || "",
         email,
         password,
         username : username.toLowerCase()

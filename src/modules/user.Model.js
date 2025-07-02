@@ -31,7 +31,7 @@ const userScema = new Schema({
     converimage: {
         type: String,
     },
-    username: [
+    watchHistory: [
         {
             type: Schema.Types.ObjectId,
             ref: "Video"

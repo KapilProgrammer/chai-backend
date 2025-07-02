@@ -7,19 +7,28 @@ cloudinary.config({
     api_secret: process.env.CLOUDNERY_API_SECRATE // Click 'View API Keys' above to copy your API secret
 });
 
-const uplodeFilePath = async(localFilePath) => {
+const uplodeFilePath = async (localFilePath) => {
     try {
-        if(!localFilePath) return null;
-        const responce = await cloudinary.uploader.upload(localFilePath,{
+        if (!localFilePath) return null;
+
+        const responce = await cloudinary.uploader.upload(localFilePath, {
             resource_type: "auto"
-        })
-        console.log("File has been uplodated successfully",responce.url);
+        });
+
+        if (fs.existsSync(localFilePath)) {
+            fs.unlinkSync(localFilePath);
+        }
+
         return responce;
+
     } catch (error) {
-        fs.unlinkSync(localFilePath) // remove the locally saved tempry file as the uploded operation get failed
+        if (fs.existsSync(localFilePath)) {
+            fs.unlinkSync(localFilePath);
+        }
         return null;
     }
 }
+
 
 export {uplodeFilePath}
 
