@@ -6,6 +6,7 @@ import { ApiResponce } from '../utils/ApiResponce.js';
 import { log } from 'console';
 import { ref } from 'process';
 import jwt from "jsonwebtoken"
+import { use } from 'react';
 
 const registerUser = asyncHandler(async (req, res) => {
     // 1 -> Valedate User Details
@@ -195,9 +196,115 @@ const refreshAccessToken = asyncHandler(async (req,res)=>{
     }
 })
 
+const changeCurrentPassword = asyncHandler(async(req,res)=>{
+    const {oldPasswor,newPassword} = req.body
+
+    const user = await User.findById(req.user?._id)
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPasswor)
+
+    if(!isPasswordCorrect){
+        throw new ApiError(400,"Invalid old password")
+    }
+
+    user.password = newPassword
+    await user.save({validateBeforeSave: false})
+
+    return res
+            .status(200)
+            .json(new ApiResponce(200,{},"Password Changed Successfully")) 
+})
+
+const getCurrentUser = asyncHandler(async(req,res) => {
+    return res
+        .status(200)
+        .json(200,req.user,"Current User featch Successfully")
+})
+
+const updateAccountDetails = asyncHandler(async(req,res)=>{
+    const {fullname,email} = req.body
+
+    if(!fullname || !email){
+        throw new ApiError(400,"All Fields are required")
+    }
+
+    const user = User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set : {
+                fullname,
+                email :email
+            }
+        },
+        {new : true}
+    ).select("-password")
+
+    return res.status(200).json(new ApiResponce(200,user,"Account details Successfully"))
+})
+
+const updateUserAvtar = asyncHandler(async(req,res) => {
+    const avtarLocalpath = req.files?.path
+
+    if(!avtarLocalpath){
+        throw new ApiError(400,"Avtar file is missing")
+    }
+    
+    const avtar = await uplodeFilePath(avtarLocalpath)
+
+    if(!avtar.url){
+        throw new ApiError(400,"Error while uploding on avtar")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set : {
+                avtar : avtar.url
+            }
+        },
+        {new : true}
+    ).select("-password")
+
+    return res.status(200).json(
+        new ApiResponce(200,user,"Cover Image Updated Successfully")
+    )
+})
+
+const updateUserCoverImg = asyncHandler(async(req,res) => {
+    const coverImgPath = req.files?.path
+
+    if(!coverImgPath){
+        throw new ApiError(400,"Cover Imgae file is missing")
+    }
+    
+    const converimage = await uplodeFilePath(coverImgPath)
+
+    if(!converimage.url){
+        throw new ApiError(400,"Error while uploding on Cover Image")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set : {
+                converimage : converimage.url
+            }
+        },
+        {new : true}
+    ).select("-password")
+
+    return res.status(200).json(
+        new ApiResponce(200,user,"Cover Image Updated Successfully")
+    )
+})
+
 export {
     registerUser,
     loginUser,
     logOutUser,
-    refreshAccessToken
+    refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    updateUserAvtar,
+    updateUserCoverImg
 } 
