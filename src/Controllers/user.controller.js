@@ -270,7 +270,7 @@ const updateUserAvtar = asyncHandler(async(req,res) => {
     )
 })
 
-const getUserChannelPipeline = asyncHandler(async(req,res) => {
+const getUserChannelProfile = asyncHandler(async(req,res) => {
     const {username} = req.params
 
     if(!username){
@@ -433,6 +433,6 @@ export {
     updateAccountDetails,
     updateUserAvtar,
     updateUserCoverImg,
-    getUserChannelPipeline,
+    getUserChannelProfile,
     getWatchHistory
 } 
